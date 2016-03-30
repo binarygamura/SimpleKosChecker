@@ -6,6 +6,9 @@
 
 package de.fomad.simplekoschecker.model;
 
+import java.util.List;
+
+
 /**
  *
  * @author binary gamura
@@ -14,7 +17,7 @@ public class CheckerThreadResult
 {
     private Exception exception;
     
-    private CVAResultNode[] results;
+    private List<CVAResultNode> results;
     
     public boolean hadError()
     {
@@ -31,14 +34,42 @@ public class CheckerThreadResult
 	this.exception = exception;
     }
 
-    public CVAResultNode[] getResults()
+    public List<CVAResultNode> getResults()
     {
 	return results;
     }
 
-    public void setResults(CVAResultNode[] results)
+    public void setResults(List<CVAResultNode> results)
     {
 	this.results = results;
     }
+    
+    public CVAResultNode getResultFor(String label)
+    {
+	CVAResultNode match = null;
+	for(CVAResultNode node : results)
+	{
+	    if(node.getLabel().equalsIgnoreCase(label))
+	    {
+		match = node;
+		break;
+	    }
+	}
+	return match;
+    }
+    
+//    public boolean hasEntryFor(String playername)
+//    {
+//	boolean hasEntry = false;
+//	for(CVAResultNode node : results)
+//	{
+//	    if(node.getLabel().equalsIgnoreCase(playername))
+//	    {
+//		hasEntry = true;
+//		break;
+//	    }
+//	}
+//	return hasEntry;
+//    }
     
 }

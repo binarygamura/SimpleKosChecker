@@ -25,5 +25,6 @@ public class Constants
 	public static final String cvaApiUri = "cvaURI";
 	public static final String fomadURI = "fomadURI";
 	public static final String foregroundInterval = "foregroundInterval";
+	public static final String keypressCooldown = "keypress_cooldown";
     }
 }

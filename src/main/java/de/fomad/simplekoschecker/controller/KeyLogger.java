@@ -1,7 +1,9 @@
 package de.fomad.simplekoschecker.controller;
 
+import de.fomad.simplekoschecker.model.Constants;
 import java.awt.Toolkit;
 import java.util.Observable;
+import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
@@ -19,9 +21,16 @@ public class KeyLogger extends Observable implements NativeKeyListener
 
     private int sequenceCounter;
     
-    private KeyLogger()
+    private long lastKeypress;
+    
+    private final long cooldown;
+    
+    public static KeyLogger instance = null;
+    
+    private KeyLogger(long cooldown)
     {
 	sequenceCounter = 0;
+	this.cooldown = cooldown;
     }
     
     @Override
@@ -35,23 +44,20 @@ public class KeyLogger extends Observable implements NativeKeyListener
     {
 	if((nke.getKeyCode() & NativeKeyEvent.CTRL_MASK) == NativeKeyEvent.CTRL_MASK && (nke.getKeyCode() & NativeKeyEvent.VC_C) == NativeKeyEvent.VC_C)
 	{
-	    sequenceCounter = 1;
-	    System.out.println("!!! WEEEEE !!!");
-	}
-	else if(nke.getKeyCode() == NativeKeyEvent.VC_D)
-	{
-	    System.out.println("!!! HEEEEE !!!");
-	    if(sequenceCounter == 1)
+	    if(sequenceCounter == 0)
 	    {
-		System.out.println("WINNNERS!!!");
-		
-		setChanged();
-		notifyObservers();
+		sequenceCounter = 1;
+		lastKeypress = System.currentTimeMillis();
 	    }
-	}
-	else 
-	{
-	    sequenceCounter = 0;
+	    else if(sequenceCounter == 1)
+	    {
+//		if(System.currentTimeMillis() - lastKeypress <= cooldown)
+//		{
+		    setChanged();
+		    notifyObservers();
+//		}
+		sequenceCounter = 0;
+	    }
 	}
     }
 
@@ -73,10 +79,9 @@ public class KeyLogger extends Observable implements NativeKeyListener
 	}
     }
     
-    public static final KeyLogger instance = new KeyLogger();
-    
-    public static void init() throws NativeHookException
+    public static void init(Properties config) throws NativeHookException
     {
+	instance = new KeyLogger(Long.valueOf(config.getProperty(Constants.ConfigKeys.keypressCooldown)));
 	GlobalScreen.setEventDispatcher(new SwingDispatchService());
 	GlobalScreen.registerNativeHook();
 	GlobalScreen.addNativeKeyListener(instance);

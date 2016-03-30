@@ -1,7 +1,6 @@
 package de.fomad.simplekoschecker.model;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -20,25 +19,30 @@ public class CVAResultNodeCache
 	this.ttl = ttl;
     }
     
-    public void evict()
-    {
-	Map.Entry<String,CVAResultNode> entry;
-	long limit = System.currentTimeMillis() - ttl;
-	for(Iterator<Map.Entry<String,CVAResultNode>> iterator = cache.entrySet().iterator(); iterator.hasNext(); )
-	{
-	    entry = iterator.next();
-	    if(entry.getValue().getLastChecked() < limit)
-	    {
-		iterator.remove();
-	    }
-	}
-    }
+//    public void evict()
+//    {
+//	Map.Entry<String,CVAResultNode> entry;
+//	long limit = System.currentTimeMillis() - ttl;
+//	for(Iterator<Map.Entry<String,CVAResultNode>> iterator = cache.entrySet().iterator(); iterator.hasNext(); )
+//	{
+//	    entry = iterator.next();
+//	    if(entry.getValue().getLastChecked() < limit)
+//	    {
+//		iterator.remove();
+//	    }
+//	}
+//    }
     
+    /**
+     * Check if the cache contains a valid entry for a given playername. An 
+     * entry is valid if 
+     * @param playername
+     * @return 
+     */
     public boolean hasEntry(String playername)
     {
-//	CVAResultNode node = cache.get(playername);
-//	return (node != null && node.getLastChecked() > (System.currentTimeMillis() - ttl));	
-	return false;
+	CVAResultNode node = cache.get(playername);
+	return (node != null && node.getLastChecked() > (System.currentTimeMillis() - ttl));	
     }
     
     public CVAResultNode getByPlayername(String playername)
@@ -53,9 +57,9 @@ public class CVAResultNodeCache
     
     public void add(CVAResultNode result)
     {
-	if(result.getType() == CVAResultNode.Type.pilot)
-	{
+//	if(result.getType() == CVAResultNode.Type.pilot)
+//	{
 	    cache.put(result.getLabel(), result);
-	}
+//	}
     }
 }

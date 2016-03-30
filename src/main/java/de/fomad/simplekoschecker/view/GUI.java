@@ -15,9 +15,12 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -27,6 +30,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import org.apache.log4j.Logger;
+import org.jnativehook.GlobalScreen;
 
 /**
  * @author binary gamura
@@ -98,6 +102,7 @@ public class GUI extends JFrame implements Observer
 	list = new KosResultList();
 
 	progressBar = new JProgressBar();
+	progressBar.setStringPainted(true);
 
 	add(progressBar, BorderLayout.NORTH);
 	add(new JScrollPane(list), BorderLayout.CENTER);
@@ -147,6 +152,12 @@ public class GUI extends JFrame implements Observer
     {
 	try
 	{
+	    //disable logging of JNativeHook
+	    //see http://stackoverflow.com/questions/26565236/jnativehook-how-do-you-keep-from-printing-everything-that-happens
+	    LogManager.getLogManager().reset();
+	    java.util.logging.Logger jnativeLogger = java.util.logging.Logger.getLogger(GlobalScreen.class.getPackage().getName());
+	    jnativeLogger.setLevel(Level.WARNING);
+	    
 	    SwingUtilities.invokeLater(new Runnable()
 	    {
 		@Override
@@ -185,6 +196,7 @@ public class GUI extends JFrame implements Observer
 	{
 	    case RESULT:
 		progressBar.setIndeterminate(false);
+		
 		CheckerThreadResult response = result.getResult();
 		if (response.hadError())
 		{
@@ -194,9 +206,13 @@ public class GUI extends JFrame implements Observer
 		{
 		    list.setData(response.getResults());
 		}
+		logger.info("done! "+response.getResults().size());
+		progressBar.setString("done! "+response.getResults().size());
 		break;
 	    case START:
 		progressBar.setIndeterminate(true);
+//		list.setData(Collections.EMPTY_LIST);
+		progressBar.setString("progressing request...! ");
 		progressBar.setString("progressing request...");
 		break;
 	}

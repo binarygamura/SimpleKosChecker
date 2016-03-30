@@ -3,8 +3,11 @@ package de.fomad.simplekoschecker.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.fomad.simplekoschecker.model.CVAResult;
+import de.fomad.simplekoschecker.model.CVAResultNode;
 import de.fomad.simplekoschecker.model.CheckerThreadResult;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -22,9 +25,9 @@ public class CheckerThread extends Observable implements Runnable
 {
     private final CloseableHttpClient httpClient;
 
-    private final String[] candidates;
+    private final List<String> candidates;
     
-    private final String[] allCandidates;
+    private final List<String> allCandidates;
 
     private final URI cvaApiURI;
 
@@ -32,7 +35,7 @@ public class CheckerThread extends Observable implements Runnable
     
     private final Gson gson;
 
-    public CheckerThread(CloseableHttpClient httpClient, String[] allCandidates, String[] candidates, URI cvaApiURI)
+    public CheckerThread(CloseableHttpClient httpClient, List<String> allCandidates, List<String> candidates, URI cvaApiURI)
     {
 	gson = new GsonBuilder().create();
 	this.httpClient = httpClient;
@@ -41,8 +44,13 @@ public class CheckerThread extends Observable implements Runnable
 	this.cvaApiURI = cvaApiURI;
     }
 
+    public List<String> getAllCandidates()
+    {
+	return allCandidates;
+    }
+    
     /**
-     * simple function to turn an array of strings into a comma
+     * simple function to turn a list of strings into a comma
      * seperated string containing the array elements. no
      * need to include another dependency, if not even 10 lines 
      * of code can do the job.
@@ -50,16 +58,17 @@ public class CheckerThread extends Observable implements Runnable
      * @param input
      * @return 
      */
-    private String implode(String[] input)
+    private String implode(List<String> input)
     {
 	StringBuilder builder = new StringBuilder();
-	if (input.length > 0)
+	int size = input.size();
+	if (size > 0)
 	{
-	    for (int i = 0; i < input.length - 1; i++)
+	    for (int i = 0; i < size - 1; i++)
 	    {
-		builder.append(input[i]).append(",");
+		builder.append(input.get(i)).append(",");
 	    }
-	    builder.append(input[input.length - 1]);
+	    builder.append(input.get(size - 1));
 	}
 	return builder.toString();
     }
@@ -71,25 +80,33 @@ public class CheckerThread extends Observable implements Runnable
 	CheckerThreadResult result = new CheckerThreadResult();
 	try
 	{
-	    URIBuilder builder = new URIBuilder(cvaApiURI);
-	    builder.addParameter("c", "json")
-		    .addParameter("icon", "32")
-		    .addParameter("type", "multi")
-		    .addParameter("max", "128")
-		    .addParameter("offset", "0")
-		    .addParameter("q", implode(candidates));
-	    URI uri = builder.build();
-	    HttpGet request = new HttpGet(uri);
-	    CloseableHttpResponse response = httpClient.execute(request);
-	    if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK)
+	    if(!candidates.isEmpty())
 	    {
-		body = EntityUtils.toString(response.getEntity());
-		CVAResult cvaResult = gson.fromJson(body, CVAResult.class);
-		result.setResults(cvaResult.getResults());
+		URIBuilder builder = new URIBuilder(cvaApiURI);
+		builder.addParameter("c", "json")
+			.addParameter("icon", "32")
+			.addParameter("type", "multi")
+			.addParameter("max", "128")
+			.addParameter("offset", "0")
+			.addParameter("q", implode(candidates));
+		URI uri = builder.build();
+		HttpGet request = new HttpGet(uri);
+		CloseableHttpResponse response = httpClient.execute(request);
+		if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK)
+		{
+		    body = EntityUtils.toString(response.getEntity());
+		    CVAResult cvaResult = gson.fromJson(body, CVAResult.class);
+		    //TODO: check cva response code.
+		    result.setResults(cvaResult.getResults());
+		}
+		else
+		{
+		    throw new CheckerThreadException("unable to query CVA api! status code was "+response.getStatusLine().getStatusCode()+".");
+		}
 	    }
 	    else
 	    {
-		throw new CheckerThreadException("unable to query CVA api! status code was "+response.getStatusLine().getStatusCode()+".");
+		result.setResults(new ArrayList<CVAResultNode>());
 	    }
 	}
 	catch (Exception ex)

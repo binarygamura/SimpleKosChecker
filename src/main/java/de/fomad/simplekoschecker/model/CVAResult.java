@@ -1,5 +1,7 @@
 package de.fomad.simplekoschecker.model;
 
+import java.util.List;
+
 /**
  *
  * @author binary gamura
@@ -12,7 +14,7 @@ public class CVAResult
     
     private String message;
     
-    private CVAResultNode[] results;
+    private List<CVAResultNode> results;
 
     public int getTotal()
     {
@@ -44,12 +46,12 @@ public class CVAResult
 	this.message = message;
     }
 
-    public CVAResultNode[] getResults()
+    public List<CVAResultNode> getResults()
     {
 	return results;
     }
 
-    public void setResults(CVAResultNode[] results)
+    public void setResults(List<CVAResultNode> results)
     {
 	this.results = results;
     }

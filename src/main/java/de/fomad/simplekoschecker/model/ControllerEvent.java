@@ -1,15 +1,26 @@
 package de.fomad.simplekoschecker.model;
 
 /**
- *
+ * Simple Container representing the two types of events a controller
+ * can ermit, which are START end RESULT. This datatype doesnt contain
+ * any logic.
+ * 
  * @author binary gamura
  */
 public class ControllerEvent 
 {
+    
     public static enum Type{START, RESULT};
     
+    /**
+     * Type of the event.
+     */
     private Type type;
     
+    /**
+     * Result from the CVA kos api or cache. This field
+     * contains only data if the type is set to RESULT.
+     */
     private CheckerThreadResult result;
 
     public ControllerEvent(Type type)
@@ -22,7 +33,6 @@ public class ControllerEvent
 	this.type = type;
 	this.result = result;
     }
-    
     
     public Type getType()
     {

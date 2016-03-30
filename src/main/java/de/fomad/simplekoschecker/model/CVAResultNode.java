@@ -6,7 +6,7 @@ package de.fomad.simplekoschecker.model;
  */
 public class CVAResultNode {
     
-    public static enum Type {pilot, alliance, corp};
+    public static enum Type {pilot, alliance, corp, unknown};
     
     private long lastChecked;
     
@@ -148,6 +148,6 @@ public class CVAResultNode {
     
     public boolean computeKos()
     {
-	return kos ||  (corp != null && corp.kos) || (corp.alliance != null && corp.alliance.kos);
+	return kos ||  (corp != null && corp.kos) || (corp != null && corp.alliance != null && corp.alliance.kos);	
     }
 }

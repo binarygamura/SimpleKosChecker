@@ -4,9 +4,12 @@ import de.fomad.simplekoschecker.model.CVAResultNode;
 import de.fomad.simplekoschecker.model.Constants;
 import java.awt.Color;
 import java.awt.Component;
+import java.util.List;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.SwingUtilities;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -14,27 +17,42 @@ import javax.swing.JList;
  */
 public class KosResultList extends JList<CVAResultNode>
 {
+    private static final Logger logger = Logger.getLogger(KosResultList.class);
+    
     public KosResultList()
     {
 	setCellRenderer(new KosResultListRenderer());
 	setModel(new KosResultListModel());
     }
     
-    public void setData(CVAResultNode[] data)
+    public void setData(final List<CVAResultNode> data)
     {
-	((KosResultListModel) getModel()).setData(data);
+	SwingUtilities.invokeLater(new Runnable()
+	{
+	    @Override
+	    public void run()
+	    {
+		((KosResultListModel) getModel()).setData(data);
+		logger.info("done setting list data!"+data.size());
+		revalidate();
+	    }
+	});
+	
     }
     
     private static String getTextLabelFor(CVAResultNode node)
     {
 	StringBuilder builder = new StringBuilder(node.getLabel());
-	builder.append(" (").append(node.getCorp().getLabel());
-	if(node.getCorp().getAlliance() != null)
+	if(node.getCorp() != null )
 	{
-	    builder.append(" | ");
-	    builder.append(node.getCorp().getAlliance().getLabel());
+	    builder.append(" (").append(node.getCorp().getLabel());
+	    if(node.getCorp().getAlliance() != null)
+	    {
+		builder.append(" | ");
+		builder.append(node.getCorp().getAlliance().getLabel());
+	    }
+	    builder.append(")");
 	}
-	builder.append(")");
 	return builder.toString();
     }
     
@@ -68,14 +86,14 @@ public class KosResultList extends JList<CVAResultNode>
     
     private static class KosResultListModel extends DefaultListModel<CVAResultNode>
     {
-	public void setData(CVAResultNode[] data)
+	public void setData(List<CVAResultNode> data)
 	{
 	    removeAllElements();
 	    for(CVAResultNode node : data)
 	    {
 		addElement(node);
 	    }
-	    fireContentsChanged(this, 0, data.length);
+	    fireContentsChanged(this, 0, data.size());
 	}
     }
 }
