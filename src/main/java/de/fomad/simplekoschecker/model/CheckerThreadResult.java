@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package de.fomad.simplekoschecker.model;
 
 import java.util.List;
@@ -47,29 +41,30 @@ public class CheckerThreadResult
     public CVAResultNode getResultFor(String label)
     {
 	CVAResultNode match = null;
-	for(CVAResultNode node : results)
+	if(results != null && !results.isEmpty())
 	{
-	    if(node.getLabel().equalsIgnoreCase(label))
+	    for(CVAResultNode node : results)
 	    {
-		match = node;
-		break;
+		if(node.getLabel().equalsIgnoreCase(label))
+		{
+		    match = node;
+		    break;
+		}
 	    }
 	}
 	return match;
     }
     
-//    public boolean hasEntryFor(String playername)
-//    {
-//	boolean hasEntry = false;
-//	for(CVAResultNode node : results)
-//	{
-//	    if(node.getLabel().equalsIgnoreCase(playername))
-//	    {
-//		hasEntry = true;
-//		break;
-//	    }
-//	}
-//	return hasEntry;
-//    }
-    
+    private int getNumberOfKosEntries()
+    {
+	int result = 0;
+	for(CVAResultNode node : results)
+	{
+	    if(node.computeKos())
+	    {
+		result++;
+	    }
+	}
+	return result;
+    }
 }

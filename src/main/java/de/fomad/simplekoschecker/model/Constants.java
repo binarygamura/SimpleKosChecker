@@ -10,6 +10,7 @@ public class Constants
     public static class Common
     {
 	public static final String configFileName = "config.properties";
+	
     }
     
     public static class Colors
@@ -21,6 +22,7 @@ public class Constants
 
     public static class ConfigKeys
     {
+	public static final String currentVersion = "currentVersion";
 	public static final String cacheTimeToLive = "cacheTTL";
 	public static final String cvaApiUri = "cvaURI";
 	public static final String fomadURI = "fomadURI";

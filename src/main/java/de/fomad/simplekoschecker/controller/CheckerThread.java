@@ -76,7 +76,6 @@ public class CheckerThread extends Observable implements Runnable
     @Override
     public void run()
     {
-	String body = null;
 	CheckerThreadResult result = new CheckerThreadResult();
 	try
 	{
@@ -94,7 +93,7 @@ public class CheckerThread extends Observable implements Runnable
 		CloseableHttpResponse response = httpClient.execute(request);
 		if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK)
 		{
-		    body = EntityUtils.toString(response.getEntity());
+		    String body = EntityUtils.toString(response.getEntity());
 		    CVAResult cvaResult = gson.fromJson(body, CVAResult.class);
 		    //TODO: check cva response code.
 		    result.setResults(cvaResult.getResults());

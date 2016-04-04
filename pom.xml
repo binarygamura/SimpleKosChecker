@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.fomad</groupId>
     <artifactId>SimpleKosChecker</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -53,6 +53,8 @@
 			    <mainClass>de.fomad.simplekoschecker.view.GUI</mainClass>
 			    <addClasspath>true</addClasspath>
 			    <classpathPrefix>libs/</classpathPrefix>
+			    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+			    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 			</manifest>
 			<manifestEntries>
 			    <Built-By>Binary Gamura</Built-By>

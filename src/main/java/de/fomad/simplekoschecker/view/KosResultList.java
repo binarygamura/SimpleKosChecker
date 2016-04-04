@@ -4,6 +4,9 @@ import de.fomad.simplekoschecker.model.CVAResultNode;
 import de.fomad.simplekoschecker.model.Constants;
 import java.awt.Color;
 import java.awt.Component;
+import java.text.Collator;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -19,14 +22,18 @@ public class KosResultList extends JList<CVAResultNode>
 {
     private static final Logger logger = Logger.getLogger(KosResultList.class);
     
+    private final KosResultListComparator comparator;
+    
     public KosResultList()
     {
 	setCellRenderer(new KosResultListRenderer());
 	setModel(new KosResultListModel());
+	comparator = new KosResultListComparator();
     }
     
     public void setData(final List<CVAResultNode> data)
     {
+	Collections.sort(data, comparator);
 	SwingUtilities.invokeLater(new Runnable()
 	{
 	    @Override
@@ -37,7 +44,6 @@ public class KosResultList extends JList<CVAResultNode>
 		revalidate();
 	    }
 	});
-	
     }
     
     private static String getTextLabelFor(CVAResultNode node)
@@ -68,6 +74,37 @@ public class KosResultList extends JList<CVAResultNode>
 	    color = Constants.Colors.notColor;
 	}
 	return color;
+    }
+    
+    public static class KosResultListComparator implements Comparator<CVAResultNode>
+    {
+
+	private final Collator stringCollator = Collator.getInstance();
+	
+	@Override
+	public int compare(CVAResultNode o1, CVAResultNode o2)
+	{
+	    int result;
+	    boolean kosA = o1.computeKos();
+	    boolean kosB = o2.computeKos();
+	    if(kosA == kosB)
+	    {
+		result = stringCollator.compare(o1.getLabel(), o2.getLabel());
+	    }
+	    else
+	    {
+		if(kosA)
+		{
+		    result = -1;
+		}
+		else
+		{
+		    result = 1;
+		}
+	    }
+	    return result;
+	}
+	
     }
     
     private static class KosResultListRenderer extends DefaultListCellRenderer

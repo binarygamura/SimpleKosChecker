@@ -13,12 +13,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import javax.swing.JButton;
@@ -37,16 +41,17 @@ import org.jnativehook.GlobalScreen;
  */
 public class GUI extends JFrame implements Observer
 {
+
     private static final Logger logger = Logger.getLogger(GUI.class);
 
-    private Controller controller;
+    private transient Controller controller;
 
     /**
      * this thread keeps the gui always on top of other applications.
      */
-    private Thread foregroundCheckerThread;
+    private transient Thread foregroundCheckerThread;
 
-    /** 
+    /**
      * configuration of this application.
      */
     private Properties properties;
@@ -57,18 +62,40 @@ public class GUI extends JFrame implements Observer
 
     private GUI()
     {
-	super("Simple KOS checker");
+	super();
 	setType(JFrame.Type.UTILITY);
     }
 
     private GUI initializeCore() throws IOException
     {
 	properties = new Properties();
-	properties.load(GUI.class.getResourceAsStream(Constants.Common.configFileName));
-	controller = new Controller(properties);
-	controller.addObserver(this);
-	controller.init();
-	return this;
+	try (InputStream propertyStream = GUI.class.getResourceAsStream(Constants.Common.configFileName))
+	{
+	    properties.load(propertyStream);
+	    controller = new Controller(properties);
+	    controller.addObserver(this);
+	    controller.init();
+
+	    //add implementation version from manifest to the properties.
+	    //the following code comes from http://stackoverflow.com/a/1273432 	    
+	    String version = "unknown";
+	    Class clazz = GUI.class;
+	    String className = clazz.getSimpleName() + ".class";
+	    String classPath = clazz.getResource(className).toString();
+	    if (classPath.startsWith("jar"))
+	    {
+		// Class not from JAR
+		String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1)
+			+ "/META-INF/MANIFEST.MF";
+		Manifest manifest = new Manifest(new URL(manifestPath).openStream());
+		Attributes attr = manifest.getMainAttributes();
+		version = attr.getValue("Implementation-Version");
+	    }
+	    setTitle("Simple KOS checker (ver.:"+version+")");
+	    properties.setProperty(Constants.ConfigKeys.currentVersion, version);
+	    
+	    return this;
+	}
     }
 
     private GUI createContent()
@@ -126,8 +153,9 @@ public class GUI extends JFrame implements Observer
 
     private void initAndShow() throws IOException
     {
+
 	setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	foregroundCheckerThread = new Thread(new ForegroundCheckerThread(this, Long.valueOf(properties.getProperty(Constants.ConfigKeys.foregroundInterval))));
+	foregroundCheckerThread = new Thread(new ForegroundCheckerThread(this, Long.parseLong(properties.getProperty(Constants.ConfigKeys.foregroundInterval))));
 	addWindowListener(new WindowAdapter()
 	{
 	    @Override
@@ -157,7 +185,7 @@ public class GUI extends JFrame implements Observer
 	    LogManager.getLogManager().reset();
 	    java.util.logging.Logger jnativeLogger = java.util.logging.Logger.getLogger(GlobalScreen.class.getPackage().getName());
 	    jnativeLogger.setLevel(Level.WARNING);
-	    
+
 	    SwingUtilities.invokeLater(new Runnable()
 	    {
 		@Override
@@ -196,7 +224,7 @@ public class GUI extends JFrame implements Observer
 	{
 	    case RESULT:
 		progressBar.setIndeterminate(false);
-		
+
 		CheckerThreadResult response = result.getResult();
 		if (response.hadError())
 		{
@@ -206,13 +234,11 @@ public class GUI extends JFrame implements Observer
 		{
 		    list.setData(response.getResults());
 		}
-		logger.info("done! "+response.getResults().size());
-		progressBar.setString("done! "+response.getResults().size());
+		logger.info("done! " + response.getResults().size());
+		progressBar.setString("done! " + response.getResults().size());
 		break;
 	    case START:
 		progressBar.setIndeterminate(true);
-//		list.setData(Collections.EMPTY_LIST);
-		progressBar.setString("progressing request...! ");
 		progressBar.setString("progressing request...");
 		break;
 	}

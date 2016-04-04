@@ -25,7 +25,7 @@ public class KeyLogger extends Observable implements NativeKeyListener
     
     private final long cooldown;
     
-    public static KeyLogger instance = null;
+    static KeyLogger instance = null;
     
     private KeyLogger(long cooldown)
     {
@@ -81,7 +81,7 @@ public class KeyLogger extends Observable implements NativeKeyListener
     
     public static void init(Properties config) throws NativeHookException
     {
-	instance = new KeyLogger(Long.valueOf(config.getProperty(Constants.ConfigKeys.keypressCooldown)));
+	instance = new KeyLogger(Long.parseLong(config.getProperty(Constants.ConfigKeys.keypressCooldown)));
 	GlobalScreen.setEventDispatcher(new SwingDispatchService());
 	GlobalScreen.registerNativeHook();
 	GlobalScreen.addNativeKeyListener(instance);

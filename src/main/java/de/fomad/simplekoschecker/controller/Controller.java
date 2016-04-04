@@ -20,6 +20,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.regex.Pattern;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -64,12 +65,14 @@ public class Controller extends Observable implements Observer
      * results from the cva api for a specified amount of time.
      */
     private final CVAResultNodeCache cache;
+    
+    private final Pattern playernameRegex = Pattern.compile("[\\w ]{3,40}");
 
     public Controller(Properties properties)
     {
 	//allow only one thread at a time to access the cva api.
 	threadPool = Executors.newSingleThreadExecutor();
-	cache = new CVAResultNodeCache(Long.valueOf(properties.getProperty(Constants.ConfigKeys.cacheTimeToLive)) * 1000L);
+	cache = new CVAResultNodeCache(Long.parseLong(properties.getProperty(Constants.ConfigKeys.cacheTimeToLive)) * 1000L);
 	this.properties = properties;
     }
 
@@ -132,26 +135,33 @@ public class Controller extends Observable implements Observer
 	for (String token : data.split("\n"))
 	{
 	    temp = token.trim();
-	    //do we have valid cache entries for the player in question?
-	    if (!cache.hasEntry(temp))
+	    //filter out invalid playernames. 
+	    if(playernameRegex.matcher(temp).matches())
 	    {
-		candidates.add(temp);
+		//do we have valid cache entries for the player in question?
+		if (!cache.hasEntry(temp))
+		{
+		    candidates.add(temp);
+		}
+		else
+		{
+		    logger.info("cache hit for " + temp + ".");
+		}
+		allCandidates.add(temp);
 	    }
-	    else
-	    {
-		logger.info("cache hit for " + temp + ".");
-	    }
-	    allCandidates.add(temp);
 	}
-	CheckerThread checkProcess = new CheckerThread(
-		httpClient,
-		allCandidates,
-		candidates,
-		new URI(properties.getProperty(Constants.ConfigKeys.cvaApiUri)));
-	checkProcess.addObserver(this);
-	threadPool.submit(checkProcess);
-	setChanged();
-	notifyObservers(new ControllerEvent(ControllerEvent.Type.START));
+	if(!allCandidates.isEmpty())
+	{
+	    CheckerThread checkProcess = new CheckerThread(
+		    httpClient,
+		    allCandidates,
+		    candidates,
+		    new URI(properties.getProperty(Constants.ConfigKeys.cvaApiUri)));
+	    checkProcess.addObserver(this);
+	    threadPool.submit(checkProcess);
+	    setChanged();
+	    notifyObservers(new ControllerEvent(ControllerEvent.Type.START));
+	}
     }
 
     private void handleCheckerThreadUpdate(CheckerThread checkProcess, CheckerThreadResult result)
